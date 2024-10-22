@@ -64,7 +64,7 @@ class App(ctk.CTk):
         self.generate = ctk.CTkButton(
             self, text="Generar Cronograma", command=self.generate_cronogram
         )
-        self.generate.grid(row=11, column=0, pady=20)
+        self.generate.grid(row=10, column=0, pady=20)
 
     def generate_cronogram(self):
         """
@@ -96,8 +96,12 @@ class App(ctk.CTk):
                 'nombre': worker_field.fields[2].get()
             })
 
-        # Setup initial row with months and days
-        header = ['Turno', 'Codigo', 'Nombre']
+        # Setup initial rows with headers
+        month_header = [''] * 3
+        week_header = [''] * 3
+        day_of_week_header = ['Turno', 'Codigo', 'Nombre']
+        day_header = [''] * 3
+        
         days = ['Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sa', 'Do']
         initial_day = days.index(self.day[:2])
         
@@ -111,15 +115,32 @@ class App(ctk.CTk):
         current_day = 1
         current_month = 0
         day_count = sum(month_days)
+        current_week = 1
         
-        for _ in range(day_count):
-            header.append(f"{days[(initial_day + current_day - 1) % 7]} {current_day} {months[current_month]}")
+        for day in range(day_count):
+            if current_day == 1:
+                month_header.append(months[current_month])
+            else:
+                month_header.append('')
+            
+            if (initial_day + day) % 7 == 1:  # Every Tuesday
+                week_header.append(f"Week {current_week}")
+                current_week += 1
+            else:
+                week_header.append('')
+            
+            day_of_week_header.append(days[(initial_day + day) % 7])
+            day_header.append(f"{current_day}")
+            
             current_day += 1
             if current_day > month_days[current_month]:
                 current_day = 1
                 current_month += 1
         
-        ws.append(header)
+        ws.append(month_header)
+        ws.append(week_header)
+        ws.append(day_of_week_header)
+        ws.append(day_header)
 
         # Generate schedules for first block (workers 0-4)
         for worker_idx in range(5):
@@ -137,10 +158,10 @@ class App(ctk.CTk):
                 week_position = (current_week + worker_idx) % 5
                 has_special = week_position in [0, 1]
                 shift = 'TC' if is_weekend and has_special else \
-                       'L' if is_weekend else \
-                       'N' if has_special and week_position == 0 else \
-                       'A' if has_special and week_position == 1 else \
-                       'D'
+                    'L' if is_weekend else \
+                    'N' if has_special and week_position == 0 else \
+                    'A' if has_special and week_position == 1 else \
+                    'D'
                 
                 row.append(shift)
                 
@@ -150,7 +171,7 @@ class App(ctk.CTk):
             ws.append(row)
 
         # Add empty row between blocks
-        ws.append([''] * len(header))
+        ws.append([''] * len(month_header))
 
         # Generate schedules for second block (workers 5-8)
         for worker_idx in range(5, 9):
@@ -186,8 +207,7 @@ class App(ctk.CTk):
         wb.save('cronograma.xlsx')
         print("Cronogram generated successfully!")
         subprocess.Popen(['start', 'cronograma.xlsx'], shell=True)
-        os.Exit(0)
-
+        
 
 app = App()
 app.mainloop()
