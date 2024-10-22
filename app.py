@@ -1,6 +1,7 @@
 import openpyxl as ox
 import customtkinter as ctk
-
+import subprocess
+import os
 """
 What this code will do is open a window with 9 input fields.
 one for each worker, with a Turno, Codigo and Name fields.
@@ -184,6 +185,8 @@ class App(ctk.CTk):
         # Save the workbook
         wb.save('cronograma.xlsx')
         print("Cronogram generated successfully!")
+        subprocess.Popen(['start', 'cronograma.xlsx'], shell=True)
+        os.Exit(0)
 
 
 app = App()
